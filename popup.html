@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="styles/popup.css">
+    </head>
+    <body>
+        <h2>SecurePass</h2>
+
+        <input type="password" id="master" placeholder="Master Password">
+        <button id="unlock">Unlock Vault</button>
+
+        <hr>
+
+        <input type="text" id="password" readonly>
+        <button id="generate">Generate Password</button>
+        <progress id="strength" max="4" value="0"></progress>
+
+        <button id="save">Save for this site</button>
+
+        <script src="lib/zxcvbn.js"></script>
+        <script src="popup.js"></script>
+    </body>
+</html>
