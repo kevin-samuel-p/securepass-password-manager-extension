@@ -1,23 +1,27 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <link rel="stylesheet" href="styles/popup.css">
-    </head>
-    <body>
-        <h2>SecurePass</h2>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SecurePass</title>
+  <link rel="stylesheet" href="styles/popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header>
+      <div class="logo">
+        <img src="icons/48.png" alt="SecurePass Logo">
+        <span>SecurePass</span>
+      </div>
+      <button id="theme-toggle" title="Toggle Light/Dark Mode">🌙</button>
+    </header>
 
-        <input type="password" id="master" placeholder="Master Password">
-        <button id="unlock">Unlock Vault</button>
+    <main>
+      <button id="manage-passwords">Manage Passwords</button>
+      <button id="check-strength">Check Password Strength</button>
+    </main>
+  </div>
 
-        <hr>
-
-        <input type="text" id="password" readonly>
-        <button id="generate">Generate Password</button>
-        <progress id="strength" max="4" value="0"></progress>
-
-        <button id="save">Save for this site</button>
-
-        <script src="lib/zxcvbn.js"></script>
-        <script src="popup.js"></script>
-    </body>
+  <script src="popup.js"></script>
+</body>
 </html>

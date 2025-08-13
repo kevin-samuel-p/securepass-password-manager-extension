@@ -1,31 +1,28 @@
-let vault = {};
-let unlocked = false;
-let key = null;
+// Minimal vault structure: { [host]: { username, password, updatedAt } }
+async function loadVault() {
+  return new Promise(res => chrome.storage.local.get('vault', r => res(r.vault || {})));
+}
+async function saveVault(vault) {
+  return new Promise(res => chrome.storage.local.set({ vault }, res));
+}
 
-chrome.runtime.onMessage.addListener(async (msg, sender, sendResponse) => {
-  if (msg.type === "unlockVault") {
-    key = await deriveKey(msg.master);
-    const stored = await chrome.storage.local.get("vault");
-
-    if (stored.vault) {
-      try {
-        vault = JSON.parse(await decrypt(stored.vault, key));
-        unlocked = true;
-        console.log("Vault unlocked.");
-      } catch {
-        alert("Incorrect master password.");
-      }
-    } else {
-      vault = {};
-      unlocked = true;
-      console.log("New vault created.");
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  (async () => {
+    if (msg.type === 'SP_GET_CREDS') {
+      const vault = await loadVault();
+      sendResponse(vault[msg.host] || null);
     }
-  }
 
-  if (msg.type === "savePassword" && unlocked) {
-    vault[msg.domain] = msg.password;
-    const encrypted = await encrypt(JSON.stringify(vault), key);
-    await chrome.storage.local.set({ vault: encrypted });
-    console.log("Password saved for", msg.domain);
-  }
+    if (msg.type === 'SP_SAVE_CREDS') {
+      const vault = await loadVault();
+      vault[msg.host] = {
+        username: msg.username,
+        password: msg.password,
+        updatedAt: Date.now()
+      };
+      await saveVault(vault);
+      sendResponse({ ok: true });
+    }
+  })();
+  return true; // keep channel open for async
 });
