@@ -1,0 +1,202 @@
+// content.js
+(() => {
+  // ---------- utilities ----------
+  const q = (sel, root = document) => root.querySelector(sel);
+  const qa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const origin = location.origin;
+
+  // Strong generator
+  function generateStrong(len = 16) {
+    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{};:,.<>?";
+    let out = "";
+    const array = new Uint32Array(len);
+    crypto.getRandomValues(array);
+    for (let i = 0; i < len; i++) out += chars[array[i] % chars.length];
+    return out;
+  }
+
+  // ---------- Shadow UI (one host for all widgets) ----------
+  function ensureHost() {
+    let host = document.getElementById("sp-shadow-host");
+    if (!host) {
+      host = document.createElement("div");
+      host.id = "sp-shadow-host";
+      document.documentElement.appendChild(host);
+      const shadow = host.attachShadow({ mode: "open" });
+      shadow.innerHTML = `
+        <style>
+          .sp-card {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            position: fixed; right: 14px; bottom: 14px; z-index: 2147483647;
+            background: #ffffff; color: #0f172a; border: 1px solid #e5e7eb;
+            border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.15);
+            padding: 10px 12px; width: 320px;
+          }
+          .sp-row { display:flex; gap:8px; align-items:center; }
+          .sp-title { font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+          .sp-muted { color:#64748b; font-size:12px; }
+          .sp-btn { border:0; border-radius:8px; padding:6px 10px; cursor:pointer; }
+          .sp-primary { background:#2563eb; color:#fff; }
+          .sp-ghost { background:#f1f5f9; color:#0f172a; }
+          .sp-meter { height:6px; border-radius:3px; background:#e5e7eb; overflow:hidden; margin-top:6px; }
+          .sp-meter > div { height:100%; width:0%; transition: width .25s; }
+          .sp-pill {
+            position:absolute; transform: translateY(-36px);
+            background:#2563eb; color:#fff; padding:4px 8px; border-radius:999px;
+            font-size:12px; cursor:pointer; white-space:nowrap;
+          }
+          .sp-inline { position:relative; margin-top:4px; }
+          .sp-tips { font-size:12px; color:#475569; margin-top:4px; }
+        </style>
+        <div id="root"></div>
+      `;
+    }
+    return host.shadowRoot;
+  }
+
+  // ---------- Save / Discard prompt ----------
+  function showSavePrompt({ site, username, password }) {
+    const shadow = ensureHost();
+    const root = shadow.getElementById("root");
+    const wrap = document.createElement("div");
+    wrap.className = "sp-card";
+    wrap.innerHTML = `
+      <div class="sp-title">Save credentials to SecurePass?</div>
+      <div class="sp-muted" style="margin-bottom:8px">${site}</div>
+      <div class="sp-row sp-muted"><strong style="min-width:80px;color:#0f172a">Username</strong> ${username || "(blank)"}</div>
+      <div class="sp-row sp-muted"><strong style="min-width:80px;color:#0f172a">Password</strong> ••••••••</div>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:10px;">
+        <button id="sp-discard" class="sp-btn sp-ghost">Discard</button>
+        <button id="sp-save" class="sp-btn sp-primary">Save</button>
+      </div>
+    `;
+    root.appendChild(wrap);
+
+    const close = () => wrap.remove();
+
+    wrap.querySelector("#sp-discard").onclick = close;
+    wrap.querySelector("#sp-save").onclick = async () => {
+      try {
+        const result = await chrome.storage.local.get(["pending"]);
+        const pending = result.pending || [];
+        pending.push({ site, username, password, ts: Date.now() });
+        await chrome.storage.local.set({ pending });
+      } catch (e) {
+        console.warn("SecurePass: failed to queue pending cred", e);
+      } finally {
+        close();
+      }
+    };
+  }
+
+  // ---------- Login detection & capture ----------
+  function findLoginForms() {
+    const forms = qa("form");
+    return forms.filter(f => {
+      const pass = q("input[type='password']", f);
+      if (!pass) return false;
+      // Prefer login forms (one password, likely no "confirm")
+      const passCount = qa("input[type='password']", f).length;
+      return passCount === 1;
+    });
+  }
+
+  function usernameCandidate(form) {
+    const fields = qa("input", form);
+    return fields.find(el => {
+      const t = (el.getAttribute("type") || "").toLowerCase();
+      const n = (el.getAttribute("name") || "").toLowerCase();
+      const id = (el.id || "").toLowerCase();
+      const ph = (el.getAttribute("placeholder") || "").toLowerCase();
+      const isTextish = ["text", "email", "tel"].includes(t) || t === "" || t === "search";
+      const looksUser = /user|email|login|id|account/i.test(n + " " + id + " " + ph);
+      return isTextish && looksUser;
+    });
+  }
+
+  function attachLoginCapture() {
+    findLoginForms().forEach(form => {
+      if (form.__spBound) return;
+      form.__spBound = true;
+      form.addEventListener("submit", () => {
+        const userEl = usernameCandidate(form);
+        const passEl = q("input[type='password']", form);
+        const username = userEl ? userEl.value : "";
+        const password = passEl ? passEl.value : "";
+        // Show Save prompt immediately on submit (practical & consistent)
+        showSavePrompt({ site: origin, username, password });
+      }, { capture: true });
+    });
+  }
+
+  // ---------- Registration helper (suggest + zxcvbn) ----------
+  function looksLikeSignup(form) {
+    const passFields = qa("input[type='password']", form);
+    if (passFields.length >= 2) return true; // password + confirm
+    const text = (form.textContent || document.body.textContent || "").toLowerCase();
+    return /sign\s*up|register|create\s*account/.test(text);
+  }
+
+  function mountSignupHelper(form) {
+    const pass = q("input[type='password']", form);
+    if (!pass || pass.__spHelper) return;
+    pass.__spHelper = true;
+
+    // Suggest pill
+    const pill = document.createElement("div");
+    pill.className = "sp-pill";
+    pill.textContent = "Suggest strong password";
+    pass.parentElement?.appendChild(pill);
+    // Position approximately above the first password field
+    const stylePos = () => {
+      const r = pass.getBoundingClientRect();
+      pill.style.left = Math.max(8, r.left + window.scrollX) + "px";
+      pill.style.top  = Math.max(8, r.top  + window.scrollY) + "px";
+    };
+    stylePos(); window.addEventListener("scroll", stylePos, { passive:true }); window.addEventListener("resize", stylePos);
+
+    pill.onclick = () => {
+      const strong = generateStrong(16);
+      pass.value = strong;
+      // Fill confirm if present
+      const confirms = qa("input[type='password']", form).filter(el => el !== pass);
+      if (confirms[0]) confirms[0].value = strong;
+      pass.dispatchEvent(new Event("input", { bubbles:true }));
+    };
+
+    // Strength UI after the field
+    const inline = document.createElement("div");
+    inline.className = "sp-inline";
+    inline.innerHTML = `
+      <div class="sp-meter"><div id="sp-bar"></div></div>
+      <div class="sp-tips" id="sp-tips"></div>
+    `;
+    pass.insertAdjacentElement("afterend", inline);
+    const bar = inline.querySelector("#sp-bar");
+    const tips = inline.querySelector("#sp-tips");
+
+    function updateStrength(pw) {
+      if (!pw) { bar.style.width = "0%"; bar.style.background = "#e5e7eb"; tips.textContent = ""; return; }
+      const res = zxcvbn(pw);
+      const widths = ["10%","30%","55%","80%","100%"];
+      const colors = ["#ef4444","#f59e0b","#fbbf24","#84cc16","#10b981"];
+      bar.style.width = widths[res.score];
+      bar.style.background = colors[res.score];
+      tips.textContent = (res.feedback.warning || "") + (res.feedback.suggestions?.length ? " " + res.feedback.suggestions.join(" ") : "");
+    }
+
+    pass.addEventListener("input", () => updateStrength(pass.value));
+  }
+
+  function scanForSignup() {
+    qa("form").forEach(f => { if (looksLikeSignup(f)) mountSignupHelper(f); });
+  }
+
+  // ---------- Boot ----------
+  attachLoginCapture();
+  scanForSignup();
+
+  // Watch dynamic pages
+  const mo = new MutationObserver(() => { attachLoginCapture(); scanForSignup(); });
+  mo.observe(document.documentElement, { subtree: true, childList: true });
+})();
