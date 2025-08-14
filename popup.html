@@ -1,27 +1,61 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SecurePass</title>
-  <link rel="stylesheet" href="styles/popup.css">
-</head>
-<body>
-  <div class="popup-container">
-    <header>
-      <div class="logo">
-        <img src="icons/48.png" alt="SecurePass Logo">
-        <span>SecurePass</span>
-      </div>
-      <button id="theme-toggle" title="Toggle Light/Dark Mode">🌙</button>
+  <head>
+    <meta charset="utf-8" />
+    <title>SecurePass</title>
+    <link rel="stylesheet" href="styles/popup.css" />
+  </head>
+  <body>
+    <header class="header">
+      <img src="icons/48.png" class="logo" alt="SecurePass" />
+      <h1>SecurePass</h1>
     </header>
 
-    <main>
-      <button id="manage-passwords">Manage Passwords</button>
-      <button id="check-strength">Check Password Strength</button>
+    <!-- Master Password Screen -->
+    <main id="auth-view" style="display:none;">
+      <section class="section">
+        <h2>Enter Master Password</h2>
+        <input id="master-pass" type="password" placeholder="Master password" />
+        <button id="unlock-btn" class="btn">Unlock</button>
+      </section>
     </main>
-  </div>
 
-  <script src="popup.js"></script>
-</body>
+    <main id="main-view">
+      <section class="section">
+        <h2>Stored Passwords</h2>
+        <button id="manage-btn" class="btn">Manage</button>
+      </section>
+
+      <section class="section">
+        <h2>Password Strength</h2>
+        <input id="strength-input" type="password" placeholder="Enter password" />
+        <div id="strength-result" class="muted">No password entered</div>
+      </section>
+
+      <section class="section">
+        <button id="theme-toggle" class="btn secondary">Toggle Theme</button>
+      </section>
+    </main>
+
+    <!-- Hidden Manage View -->
+    <main id="manage-view" style="display:none;">
+      <section class="section">
+        <h2>Manage Passwords</h2>
+        <div id="password-list"></div>
+      </section>
+
+      <section class="section">
+        <input id="site-input" type="text" placeholder="Site" />
+        <input id="user-input" type="text" placeholder="Username" />
+        <input id="pass-input" type="password" placeholder="Password" />
+      </section>
+
+      <section class="section">
+        <button id="save-btn" class="btn">Save</button>
+        <button id="back-btn" class="btn secondary">Back</button>
+      </section>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
 </html>

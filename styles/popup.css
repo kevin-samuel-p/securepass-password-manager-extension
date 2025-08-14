@@ -1,67 +1,84 @@
-:root {
-  --bg-color: #1e1e1e;
-  --text-color: #ffffff;
-  --button-bg: #333;
-  --button-hover: #444;
-}
-
-.light-theme {
-  --bg-color: #f4f4f4;
-  --text-color: #222;
-  --button-bg: #e0e0e0;
-  --button-hover: #d5d5d5;
-}
-
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  width: 250px;
+  padding: 12px;
+  width: 260px;
+  font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
 }
 
-.popup-container {
-  padding: 10px;
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
-header {
+.logo { width: 24px; height: 24px; }
+h1 { font-size: 16px; margin: 0; }
+.muted { color: #6b7280; font-size: 12px; }
+
+.section {
+  margin-bottom: 12px;
+}
+
+h2 {
+  font-size: 14px;
+  margin: 0 0 6px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 6px 10px;
+  font-size: 13px;
+  border: none;
+  border-radius: 4px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.btn.secondary {
+  background: #6b7280;
+}
+
+input[type="text"], input[type="password"] {
+  width: 80%;
+  padding: 6px;
+  font-size: 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  margin-bottom: 6;
+  gap: 6px;
+}
+
+body.dark {
+  background: #1f2937;
+  color: #f3f4f6;
+}
+
+body.dark .muted {
+  color: #9ca3af;
+}
+
+body.dark input[type="text"], body.dark input[type="password"] {
+  background: #374151;
+  color: #f3f4f6;
+  border-color: #4b5563;
+}
+
+.password-entry {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: #f9fafb;
+  padding: 4px 6px;
+  margin-bottom: 4px;
+  border-radius: 4px;
 }
 
-.logo {
-  display: flex;
-  align-items: center;
-  font-weight: bold;
-}
-
-.logo img {
-  width: 24px;
-  height: 24px;
-  margin-right: 8px;
-}
-
-button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  border: none;
-  cursor: pointer;
-  background-color: var(--button-bg);
-  color: var(--text-color);
-  border-radius: 5px;
-  transition: background-color 0.2s;
-}
-
-button:hover {
-  background-color: var(--button-hover);
+body.dark .password-entry {
+  background: #374151;
 }
 
 #theme-toggle {
-  width: auto;
-  padding: 5px;
-  background: none;
-  border: none;
-  font-size: 16px;
+  align-self: right;
 }
