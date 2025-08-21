@@ -1,8 +1,8 @@
 // content.js
 (() => {
   // ---------- utilities ----------
-  const q = (sel, root = document) => root.querySelector(sel);
-  const qa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const q = (sel, root=document) => root.querySelector(sel);
+  const qa = (sel, root=document) => Array.from(root.querySelectorAll(sel));
   const origin = location.origin;
 
   // Strong generator
@@ -54,41 +54,6 @@
     return host.shadowRoot;
   }
 
-  // ---------- Save / Discard prompt ----------
-  function showSavePrompt({ site, username, password }) {
-    const shadow = ensureHost();
-    const root = shadow.getElementById("root");
-    const wrap = document.createElement("div");
-    wrap.className = "sp-card";
-    wrap.innerHTML = `
-      <div class="sp-title">Save credentials to SecurePass?</div>
-      <div class="sp-muted" style="margin-bottom:8px">${site}</div>
-      <div class="sp-row sp-muted"><strong style="min-width:80px;color:#0f172a">Username</strong> ${username || "(blank)"}</div>
-      <div class="sp-row sp-muted"><strong style="min-width:80px;color:#0f172a">Password</strong> ••••••••</div>
-      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:10px;">
-        <button id="sp-discard" class="sp-btn sp-ghost">Discard</button>
-        <button id="sp-save" class="sp-btn sp-primary">Save</button>
-      </div>
-    `;
-    root.appendChild(wrap);
-
-    const close = () => wrap.remove();
-
-    wrap.querySelector("#sp-discard").onclick = close;
-    wrap.querySelector("#sp-save").onclick = async () => {
-      try {
-        const result = await chrome.storage.local.get(["pending"]);
-        const pending = result.pending || [];
-        pending.push({ site, username, password, ts: Date.now() });
-        await chrome.storage.local.set({ pending });
-      } catch (e) {
-        console.warn("SecurePass: failed to queue pending cred", e);
-      } finally {
-        close();
-      }
-    };
-  }
-
   // ---------- Login detection & capture ----------
   function findLoginForms() {
     const forms = qa("form");
@@ -110,7 +75,9 @@
 
   document.addEventListener("submit", function (e) {
     const form = e.target;
-    const usernameField = form.querySelector("input[type='email'], input[name*='user'], input[name*='email']");
+    const usernameField = form.querySelector(
+      "input[type='text'], input[type='email'], input[name*='user'], input[name*='email'], input[id*='user'], input[id*='email'], input[placeholder*='user'], input[placeholder*='email']"
+    );
     const passwordField = form.querySelector("input[type='password']");
 
     if (usernameField && passwordField) {
@@ -119,30 +86,74 @@
     }
   }, true);
 
+  // function usernameCandidate(form) {
+  //   const fields = qa("input", form);
+  //   return fields.find(el => {
+  //     const t = (el.getAttribute("type") || "").toLowerCase();
+  //     const n = (el.getAttribute("name") || "").toLowerCase();
+  //     const id = (el.id || "").toLowerCase();
+  //     const ph = (el.getAttribute("placeholder") || "").toLowerCase();
+  //     const isTextish = ["text", "email", "tel"].includes(t) || t === "" || t === "search";
+  //     const looksUser = /user|email|login|id|account|name/i.test(n + " " + id + " " + ph);
+  //     return isTextish && looksUser;
+  //   });
+  // }
+
+  // function attachLoginCapture() {
+  //   findLoginForms().forEach(form => {
+  //     if (form.__spBound) return;
+  //     form.__spBound = true;
+  //     form.addEventListener("submit", () => {
+  //       const userEl = usernameCandidate(form);
+  //       const passEl = q("input[type='password']", form);
+  //       const username = userEl ? userEl.value : "";
+  //       const password = passEl ? passEl.value : "";
+
+  //       if (!userEl) {
+  //         const passIndex = fields.findIndex(f => f.type === "password");
+  //         if (passIndex > 0) {
+  //           userEl = fields[passIndex - 1]; // Hopefully username/email is right before password
+  //         }
+  //       }
+  //     }, { capture: true });
+  //   });
+  // }
+
   function usernameCandidate(form) {
     const fields = qa("input", form);
-    return fields.find(el => {
+    let userEl = fields.find(el => {
       const t = (el.getAttribute("type") || "").toLowerCase();
       const n = (el.getAttribute("name") || "").toLowerCase();
       const id = (el.id || "").toLowerCase();
       const ph = (el.getAttribute("placeholder") || "").toLowerCase();
       const isTextish = ["text", "email", "tel"].includes(t) || t === "" || t === "search";
-      const looksUser = /user|email|login|id|account/i.test(n + " " + id + " " + ph);
+      const looksUser = /user|email|login|id|account|name/i.test(n + " " + id + " " + ph);
       return isTextish && looksUser;
     });
+
+    // Fallback: first text-like input before the password
+    if (!userEl) {
+      const passIndex = fields.findIndex(f => f.type === "password");
+      if (passIndex > 0) {
+        userEl = fields[passIndex - 1];
+      }
+    }
+    return userEl;
   }
 
   function attachLoginCapture() {
     findLoginForms().forEach(form => {
       if (form.__spBound) return;
       form.__spBound = true;
+
       form.addEventListener("submit", () => {
         const userEl = usernameCandidate(form);
         const passEl = q("input[type='password']", form);
         const username = userEl ? userEl.value : "";
         const password = passEl ? passEl.value : "";
-        // Show Save prompt immediately on submit (practical & consistent)
-        showSavePrompt({ site: origin, username, password });
+        const site = window.location.hostname;
+
+        captureCredentials(site, username, password);
       }, { capture: true });
     });
   }

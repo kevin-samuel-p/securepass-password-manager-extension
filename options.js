@@ -12,7 +12,7 @@
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td title="${p.site}">${p.site}</td>
-        <td title="${p.user}">${p.user}</td>
+        <td title="${p.username}">${p.username}</td>
         <td><span class="badge">••••••••</span></td>
         <td><button class="btn" data-i="${i}">Delete</button></td>
       `;
