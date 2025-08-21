@@ -178,7 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
       passwords.splice(index, 1);
       chrome.storage.local.set({ passwords }, loadPasswords);
     });
-  };
+  }
 
   unlockBtn.addEventListener("click", async () => {
     const masterPassword = masterPassInput.value.trim();

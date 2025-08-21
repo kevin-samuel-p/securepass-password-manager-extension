@@ -101,6 +101,24 @@
     });
   }
 
+  function captureCredentials(site, username, password) {
+    chrome.runtime.sendMessage({
+      action: "pendingCreds",
+      data: { site, username, password }
+    });
+  }
+
+  document.addEventListener("submit", function (e) {
+    const form = e.target;
+    const usernameField = form.querySelector("input[type='email'], input[name*='user'], input[name*='email']");
+    const passwordField = form.querySelector("input[type='password']");
+
+    if (usernameField && passwordField) {
+      const site = window.location.hostname;
+      captureCredentials(site, usernameField.value, passwordField.value);
+    }
+  }, true);
+
   function usernameCandidate(form) {
     const fields = qa("input", form);
     return fields.find(el => {
