@@ -2,22 +2,35 @@ let pendingCreds = null;
 
 chrome.runtime.onMessage.addListener((msg, sender) => {
   if (msg.action === "pendingCreds") {
-    pendingCreds = msg.data;
+    // pendingCreds = msg.data;
+    chrome.storage.local.get(["passwords"], (result) => {
+      const passwords = result.passwords || [];
+      const exists = passwords.some(p => p.site === msg.data.site);
+      
+      if (!exists) {
+        pendingCreds = msg.data;
 
-    // Wait for next page load to inject dialog
-    chrome.tabs.onUpdated.addListener(function listener(tabId, changeInfo) {
-      if (changeInfo.status === "complete" && pendingCreds) {
-        chrome.scripting.executeScript({
-          target: { tabId },
-          func: showDialog,
-          args: [pendingCreds]
-        });
-        chrome.tabs.onUpdated.removeListener(listener);
+        // Wait for next page load to inject dialog
+        chrome.tabs.onUpdated.addListener(function listener(tabId, changeInfo) {
+          if (changeInfo.status === "complete" && pendingCreds) {
+            chrome.scripting.executeScript({
+              target: { tabId },
+              func: showDialog,
+              args: [pendingCreds]
+            });
+            chrome.tabs.onUpdated.removeListener(listener);
+          }
+        });        
+      } else {
+        console.log("Credentials already saved for:", msg.data.site);
       }
     });
   } else if (msg.action === "saveCreds") {
     chrome.storage.local.get(["passwords"], (result) => {
-      const passwords = result.passwords || [];
+      let passwords = result.passwords || [];
+
+      // Remove existing creds for this site before pushing new creds
+      passwords = passwords.filter(p => p.site !== msg.data.site);
       passwords.push({
         site: msg.data.site,
         username: msg.data.username,

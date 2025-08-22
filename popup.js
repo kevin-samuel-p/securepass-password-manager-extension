@@ -80,6 +80,19 @@ document.addEventListener("DOMContentLoaded", () => {
   strengthInput.addEventListener("input", () => {
     const val = strengthInput.value;
     strengthResult.textContent = getStrengthText(val);
+    switch(strengthResult.textContent) {
+      case "Weak":
+        strengthResult.style.color = "#ff000d";
+        break;
+      case "Medium":
+        strengthResult.style.color = "#ffbf00";
+        break;
+      case "Strong":
+        strengthResult.style.color = "#52cc00";
+        break;
+      default:
+        strengthResult.style.color = "#c0c0c0";
+    }
   });
 
   function getStrengthText(password) {

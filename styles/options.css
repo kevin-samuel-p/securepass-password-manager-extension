@@ -1,8 +1,51 @@
-body { font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; margin: 16px; color:#0f172a; }
+/* body { font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; margin: 16px; color:#0f172a; }
 header h1 { font-size:18px; margin:0 0 12px; }
 .muted { color:#64748b; }
 table { width:100%; border-collapse: collapse; }
 th, td { border-bottom: 1px solid #e5e7eb; text-align:left; padding:8px; }
 tbody tr:hover { background:#f8fafc; }
 .btn { border:0; border-radius:8px; padding:6px 10px; cursor:pointer; background:#ef4444; color:#fff; }
-.badge { display:inline-block; background:#111827; color:#fff; border-radius:4px; padding:2px 6px; font-size:12px; }
+.badge { display:inline-block; background:#111827; color:#fff; border-radius:4px; padding:2px 6px; font-size:12px; } */
+
+/* Table styling */
+table {
+  width: 100%;
+  border-collapse: collapse; /* fixes the misaligned lines */
+}
+
+th, td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd; /* uniform lines */
+}
+
+/* Buttons */
+button {
+  border: none;
+  border-radius: 6px; /* rounded rectangle */
+  padding: 6px 10px;
+  cursor: pointer;
+  margin: 0; /* removes the gap */
+  font-size: 16px;
+  transition: all 0.2s ease; /* smooth hover animation */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15); /* subtle */
+}
+
+/* Specific colors */
+.see {
+  background-color: #2ecc71; /* green */
+  color: white;
+}
+.del {
+  background-color: #e74c3c; /* red */
+  color: white;
+}
+
+/* Hover effect: grow */
+button:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
