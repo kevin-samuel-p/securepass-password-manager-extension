@@ -1,10 +1,9 @@
 let manageView, mainView;
 let strengthInput, strengthResult, siteInput, userInput, passInput, masterPassInput;
-let manageBtn, backBtn, saveBtn, unlockBtn, themeToggle;
+let manageBtn, backBtn, saveBtn, unlockBtn;
 let passwordList, pendingList;
 
 document.addEventListener("DOMContentLoaded", () => {
-  themeToggle = document.getElementById("theme-toggle");
   strengthInput = document.getElementById("strength-input");
   strengthResult = document.getElementById("strength-result");
 
@@ -70,11 +69,6 @@ document.addEventListener("DOMContentLoaded", () => {
       };
     });
   }
-
-  // Theme toggle
-  themeToggle.addEventListener("click", () => {
-    document.body.classList.toggle("dark");
-  });
 
   // Password strength checker
   strengthInput.addEventListener("input", () => {

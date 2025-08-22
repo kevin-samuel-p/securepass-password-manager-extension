@@ -25,7 +25,7 @@
     tbody.querySelectorAll("button.see").forEach(see => {
       see.onclick = async (e) => {
         const p = +e.target.getAttribute("data-i");
-        const {passwords = []} = await chrome.storage.local.get(["passwords"]);
+        const { passwords = [] } = await chrome.storage.local.get(["passwords"]);
         const creds = passwords[p];
         
         // Locate span in the same row
@@ -48,9 +48,9 @@
     tbody.querySelectorAll("button.del").forEach(del => {
       del.onclick = async (e) => {
         const i = +e.target.getAttribute("data-i");
-        const {passwords = []} = await chrome.storage.local.get(["passwords"]);
+        const { passwords = [] } = await chrome.storage.local.get(["passwords"]);
         passwords.splice(i, 1);
-        await chrome.storage.local.set({passwords});
+        await chrome.storage.local.set({ passwords });
         load();
       };
     });
@@ -58,3 +58,20 @@
 
   load();
 })();
+
+function applyTheme() {
+  chrome.storage.local.get(["theme"], ({ theme }) => {
+    if (theme === "dark") {
+      document.body.classList.add("dark");
+    } else {
+      document.body.classList.remove("dark");
+    }
+  });
+}
+
+applyTheme();
+chrome.storage.onChanged.addListener((change, area) => {
+  if (area === "local" && change.theme) {
+    applyTheme();
+  }
+});

@@ -86,39 +86,6 @@
     }
   }, true);
 
-  // function usernameCandidate(form) {
-  //   const fields = qa("input", form);
-  //   return fields.find(el => {
-  //     const t = (el.getAttribute("type") || "").toLowerCase();
-  //     const n = (el.getAttribute("name") || "").toLowerCase();
-  //     const id = (el.id || "").toLowerCase();
-  //     const ph = (el.getAttribute("placeholder") || "").toLowerCase();
-  //     const isTextish = ["text", "email", "tel"].includes(t) || t === "" || t === "search";
-  //     const looksUser = /user|email|login|id|account|name/i.test(n + " " + id + " " + ph);
-  //     return isTextish && looksUser;
-  //   });
-  // }
-
-  // function attachLoginCapture() {
-  //   findLoginForms().forEach(form => {
-  //     if (form.__spBound) return;
-  //     form.__spBound = true;
-  //     form.addEventListener("submit", () => {
-  //       const userEl = usernameCandidate(form);
-  //       const passEl = q("input[type='password']", form);
-  //       const username = userEl ? userEl.value : "";
-  //       const password = passEl ? passEl.value : "";
-
-  //       if (!userEl) {
-  //         const passIndex = fields.findIndex(f => f.type === "password");
-  //         if (passIndex > 0) {
-  //           userEl = fields[passIndex - 1]; // Hopefully username/email is right before password
-  //         }
-  //       }
-  //     }, { capture: true });
-  //   });
-  // }
-
   function usernameCandidate(form) {
     const fields = qa("input", form);
     let userEl = fields.find(el => {

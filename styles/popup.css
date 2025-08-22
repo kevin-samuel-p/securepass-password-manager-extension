@@ -50,21 +50,6 @@ input[type="text"], input[type="password"] {
   gap: 6px;
 }
 
-body.dark {
-  background: #1f2937;
-  color: #f3f4f6;
-}
-
-body.dark .muted {
-  color: #9ca3af;
-}
-
-body.dark input[type="text"], body.dark input[type="password"] {
-  background: #374151;
-  color: #f3f4f6;
-  border-color: #4b5563;
-}
-
 .password-entry {
   display: flex;
   justify-content: space-between;
@@ -73,10 +58,6 @@ body.dark input[type="text"], body.dark input[type="password"] {
   padding: 4px 6px;
   margin-bottom: 4px;
   border-radius: 4px;
-}
-
-body.dark .password-entry {
-  background: #374151;
 }
 
 #theme-toggle {
