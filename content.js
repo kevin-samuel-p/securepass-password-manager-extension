@@ -188,11 +188,58 @@
     qa("form").forEach(f => { if (looksLikeSignup(f)) mountSignupHelper(f); });
   }
 
+  // ---------- Password Autocomplete/Autofill Feature ----------
+  function autofillCreds() {
+    const site = window.location.hostname;
+
+    chrome.storage.local.get(["passwords"], (result) => {
+      const passwords = result.passwords || [];
+      const creds = passwords.find(p => p.site === site);
+      if (!creds) return;
+
+      // Go through each detected login form
+      findLoginForms().forEach(form => {
+        const userEl = usernameCandidate(form);
+        const passEl = q("input[type='password']", form);
+
+        if (userEl && !userEl.value) {
+          userEl.value = creds.username;
+          userEl.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        if (passEl && !passEl.value) {
+          passEl.value = creds.password;
+          passEl.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      });
+    });
+  }
+
   // ---------- Boot ----------
   attachLoginCapture();
   scanForSignup();
+  autofillCreds();
 
   // Watch dynamic pages
-  const mo = new MutationObserver(() => { attachLoginCapture(); scanForSignup(); });
+  const mo = new MutationObserver(() => { 
+    attachLoginCapture(); 
+    scanForSignup(); 
+    autofillCreds(); 
+  });
   mo.observe(document.documentElement, { subtree: true, childList: true });
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const loginForms = findLoginForms();
+    if (loginForms.length === 0) return;
+
+    const { usernameField, passwordField } = loginForms[0];
+
+    chrome.runtime.sendMessage({ action: "getCreds", site: location.hostname });
+    chrome.runtime.onMessage.addListener((msg) => {
+      if (msg.action === "credsResult" && msg.site === location.hostname && msg.creds) {
+        const { username, password } = msg.creds;
+        if (usernameField) usernameField.value = username;
+        if (passwordField) passwordField.value = password;
+      }
+    });
+  });
 })();
